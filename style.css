@@ -461,3 +461,8 @@ section:last-child {
 .percentage {
   font-weight: bold;
 }
+
+.sectionContent ul li {
+  font-weight: bold;
+  margin: 2% 0 1% 3%;
+}
