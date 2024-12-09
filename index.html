@@ -1,243 +1,247 @@
-
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Resume-Saptarshi</title>
+<html lang="en">
 
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content="The resume of Saptarshi Banerjee" />
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="logoicon.ico" />
-    <link type="text/css" rel="stylesheet" href="style.css" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Rokkitt:400,700|Lato:400,300"
-      rel="stylesheet"
-      type="text/css"
-    />
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Saptarshi</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
 
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body id="top">
-    <div id="cv" class="instaFade">
-      <div class="mainDetails">
-        <div id="headshot" class="quickFade">
-          <img src="headshot.jpg" alt="Saptarshi Banerjee" />
+  <!-- Favicons -->
+  <link href="assets/img/logoicon.ico" rel="icon">
+  <!-- <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon"> -->
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- =======================================================
+  * Template Name: iLanding
+  * Template URL: https://bootstrapmade.com/ilanding-bootstrap-landing-page-template/
+  * Updated: Oct 28 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <img src="assets/img/logo.png" alt="">
+        <h1 class="sitename">Saptarshi</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <!-- <li><a href="#hero" class="active">Home</a></li> -->
+          <!-- <li><a href="#about">About</a></li>
+          <li><a href="#features">Skill</a></li>
+          <li><a href="#services">Projects</a></li>
+          <li><a href="#pricing">Pricing</a></li> -->
+          <!-- <li class="dropdown"><a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="#">Dropdown 1</a></li>
+              <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="#">Deep Dropdown 1</a></li>
+                  <li><a href="#">Deep Dropdown 2</a></li>
+                  <li><a href="#">Deep Dropdown 3</a></li>
+                  <li><a href="#">Deep Dropdown 4</a></li>
+                  <li><a href="#">Deep Dropdown 5</a></li>
+                </ul>
+              </li>
+              <li><a href="#">Dropdown 2</a></li>
+              <li><a href="#">Dropdown 3</a></li>
+              <li><a href="#">Dropdown 4</a></li>
+            </ul>
+          </li> -->
+          <!-- <li><a href="#contact">Contact</a></li> -->
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="#"id="show-contact-popup" >Get Started</a>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <div class="hero-content" data-aos="fade-up" data-aos-delay="200">
+              <div class="company-badge mb-4">
+                <i class="bi bi-gear-fill me-2"></i>
+                Turning Passion into Progress
+              </div>
+
+              <h1 class="mb-4">
+                Hi, I’m Saptarshi <br>                
+                <span class="accent-text">A Developer, Mentor, and Problem-Solver</span>
+              </h1>
+
+              <p class="mb-4 mb-md-5">
+                With over 8 years of experience in software development, I specialize in crafting solutions that combine innovation with simplicity. My journey spans creating web and desktop applications, empowering businesses, and sharing knowledge to inspire growth.
+
+                Whether you're here to learn, collaborate, or just explore my work, I’m excited to connect with you. Let’s create something meaningful together.
+              </p>
+
+              <!-- <div class="hero-buttons">
+                <a href="#about" class="btn btn-primary me-0 me-sm-2 mx-1">Get Started</a>
+                <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="btn btn-link mt-2 mt-sm-0 glightbox">
+                  <i class="bi bi-play-circle me-1"></i>
+                  Play Video
+                </a>
+              </div> -->
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="hero-image" data-aos="zoom-out" data-aos-delay="300">
+              <img src="assets/img/illustration-1.webp" alt="Hero Image" class="img-fluid">
+
+              <!-- <div class="customers-badge">
+                <div class="customer-avatars">
+                  <img src="assets/img/avatar-1.webp" alt="Customer 1" class="avatar">
+                  <img src="assets/img/avatar-2.webp" alt="Customer 2" class="avatar">
+                  <img src="assets/img/avatar-3.webp" alt="Customer 3" class="avatar">
+                  <img src="assets/img/avatar-4.webp" alt="Customer 4" class="avatar">
+                  <img src="assets/img/avatar-5.webp" alt="Customer 5" class="avatar">
+                  <span class="avatar more">12+</span>
+                </div>
+                <p class="mb-0 mt-2">12,000+ lorem ipsum dolor sit amet consectetur adipiscing elit</p>
+              </div> -->
+            </div>
+          </div>
         </div>
 
-        <div id="name">
-          <h1 class="quickFade delayTwo">Saptarshi Banerjee</h1>
-          <h2 class="quickFade delayThree">Software Developer</h2>
+        <!-- <div class="row stats-row gy-4 mt-5" data-aos="fade-up" data-aos-delay="500">
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="bi bi-trophy"></i>
+              </div>
+              <div class="stat-content">
+                <h4>3x Won Awards</h4>
+                <p class="mb-0">Vestibulum ante ipsum</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="bi bi-briefcase"></i>
+              </div>
+              <div class="stat-content">
+                <h4>6.5k Faucibus</h4>
+                <p class="mb-0">Nullam quis ante</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="bi bi-graph-up"></i>
+              </div>
+              <div class="stat-content">
+                <h4>80k Mauris</h4>
+                <p class="mb-0">Etiam sit amet orci</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="bi bi-award"></i>
+              </div>
+              <div class="stat-content">
+                <h4>6x Phasellus</h4>
+                <p class="mb-0">Vestibulum ante ipsum</p>
+              </div>
+            </div>
+          </div>
+        </div> -->
+        <div class="social-links d-flex m-4">
+          <a target="_blank" href="https://x.com/saptarshi111" class="m-2"><i class="bi bi-twitter-x"></i></a>
+          <a target="_blank" href="https://www.facebook.com/profile.php?id=61555319043875" class="m-2"><i class="bi bi-facebook"></i></a>
+          <a target="_blank" href="https://www.youtube.com/@isaptarshi" class="m-2"><i class="bi bi-youtube"></i></a>
+          <a target="_blank" href="https://www.linkedin.com/in/saptarshi-banerjee-a8bb8680/" class="m-2"><i class="bi bi-linkedin"></i></a>
         </div>
-
-        <div id="contactDetails" class="quickFade delayFour">
-          <ul>
-            <li>
-              A:
-              <span class="addressspan"
-                >THAKUR COMPLEX,KANDIVALI EAST, MUMBAI - 400101</span
-              >
-            </li>
-            <li>DOB: <span class="dobspan">12th May, 1989</span></li>
-            <li>
-              E:
-              <span class="eamilspan"
-                ><a href="mailto:saptarshioff@gmail.com" target="_blank"
-                  >saptarshioff@gmail.com</a
-                ></span
-              >
-            </li>
-            <!-- <li>w: <a href="http://www.bloggs.com">www.bloggs.com</a></li> -->
-            <li>M: <span class="mobilespan">+918900604276</span></li>
-          </ul>
-        </div>
-        <div class="clear"></div>
       </div>
 
-      <div id="mainArea" class="quickFade delayFive">
-        <section>
-          <article>
-            <div class="sectionTitle">
-              <h1>Personal Profile</h1>
-            </div>
+    </section><!-- /Hero Section -->
 
-            <div class="sectionContent">
-              <p>
-                Looking for a Software Developer position at a leading IT
-                organization where I can apply my
-                <span class="percentage">4 years 11 months</span> of experience
-                of development in
-                <span class="percentage"
-                  >C#, ASP.NET, MVC Architecture, MSSQL Sever, WEB API,
-                  Javascript and JQuery</span
-                >
-                to enhace my technical skills and upgrade my professional
-                knowledge and convert organizational goals into reality.
-              </p>
-            </div>
-          </article>
-          <div class="clear"></div>
-        </section>
+  </main>
 
-        <section id="work-experience">
-          <div class="sectionTitle">
-            <h1>Work Experience</h1>
+  <!-- <footer id="footer" class="footer">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+         
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
           </div>
+        </div>
 
-          <div class="sectionContent">
-            <article>
-              <h2>Software Developer at Cyber SWIFT Infotech Pvt Ltd.</h2>
-              <p class="subDetails">July 2019 - June 2020</p>
 
-              <ul>
-                <li>
-                  Executed projects to monitor progress of works of an
-                  organazation.
-                </li>
-                <li>
-                  Part of four members team to build a realiable online system
-                  to track location of works and attendance.
-                </li>
-                <li>
-                  Part of redesigning team to fix existing bugs and execute
-                  changes to produce more sustainable system.
-                </li>
-              </ul>
 
-              <p></p>
-            </article>
-
-            <article>
-              <h2>Software Application Support at SISL Infotech Pvt. Ltd</h2>
-              <p class="subDetails">July 2018 - June 2019</p>
-              <ul>
-                <li>
-                  Part of a three member team for developing a online system to
-                  register marriages online without any hustle.
-                </li>
-                <li>
-                  Part of a planning team to detect application vurnabilities
-                  and remove them to make system more secure.
-                </li>
-                <li>Guided team to create more user friendly system.</li>
-              </ul>
-              <p></p>
-            </article>
-
-            <article>
-              <h2>Computer Analyst at C.I.D. West Bengal</h2>
-              <p class="subDetails">August 2017 - June 2018</p>
-              <ul>
-                <li>
-                  Engaged in develop a system to take care of progress in filled
-                  case.
-                </li>
-                <li>Part of a team to enhance user experience.</li>
-                <li>
-                  Guided a team to build social media monitoring application and
-                  to report alarming content to the supervisor.
-                </li>
-              </ul>
-              <p></p>
-            </article>
-            <article>
-              <h2>Jr. Software Developer at Webzemini Software Pvt. Ltd.</h2>
-              <p class="subDetails">July 2014 - June 2016</p>
-              <ul>
-                <li>
-                  Engaged in development of desktop application for various
-                  money marketing organization.
-                </li>
-                <li>Produced various kind of reports for different users.</li>
-                <li>Engaged in fixing and solving bugs.</li>
-              </ul>
-              <p></p>
-            </article>
-          </div>
-          <div class="clear"></div>
-        </section>
-
-        <section>
-          <div class="sectionTitle">
-            <h1>Key Skills</h1>
-          </div>
-
-          <div class="sectionContent">
-            <ul class="keySkills">
-              <li>C#</li>
-              <li>VB.NET</li>
-              <li>ASP.NET MVC</li>
-              <li>Web API</li>
-              <li>Javascript</li>
-              <li>JQuery</li>
-              <li>MSSQL SERVER</li>
-              <li>Crystal Reports</li>
-            </ul>
-          </div>
-          <div class="clear"></div>
-        </section>
-
-        <section>
-          <div class="sectionTitle">
-            <h1>Education</h1>
-          </div>
-
-          <div class="sectionContent">
-            <article>
-              <h2>Indas High School (W.B.B.S.E)</h2>
-              <p class="subDetails">Madhyamik Examination (2004)</p>
-              <p>
-                Percentage:
-                <span class="percentage">84.25</span>
-              </p>
-            </article>
-            <article>
-              <h2>Indas High School (W.B.C.H.S.E)</h2>
-              <p class="subDetails">Higher Secondery (2004 - 2006)</p>
-              <p>
-                Percentage: <span class="percentage">77.3</span> <br />Score 200
-                out of 200 in Mathematics.
-              </p>
-            </article>
-            <article>
-              <h2>Ramakrishna Mission Residential College, Narendrapur</h2>
-              <p class="subDetails">
-                Graduation (2006 - 2011)
-              </p>
-              <p>
-                Percentage: <span class="percentage">71</span> <br />
-                Completed Honours in Mathematics with and Computer Science as
-                General Subject.
-              </p>
-            </article>
-            <article>
-              <h2>Vidyasagar University</h2>
-              <p class="subDetails">
-                Masters Of Computer Application (2011 - 2014)
-              </p>
-              <p>
-                Percentage: <span class="percentage">71</span> <br />
-                Learn Data Structure, Algorith, Programming Languages
-                (C,C++,Java), Networking and Database Designing.
-              </p>
-            </article>
-          </div>
-          <div class="clear"></div>
-        </section>
       </div>
     </div>
-    <!-- <script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-var pageTracker = _gat._getTracker("UA-3753241-1");
-pageTracker._initData();
-pageTracker._trackPageview();
-</script> -->
-    <script type="text/javascript"
-src="https://onsite.optimonk.com/script.js?account=243055"
-async></script>
-  </body>
+
+  </footer> -->
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+  <script>
+    (function (s, e, n, d, er) {
+      s['Sender'] = er;
+      s[er] = s[er] || function () {
+        (s[er].q = s[er].q || []).push(arguments)
+      }, s[er].l = 1 * new Date();
+      var a = e.createElement(n),
+          m = e.getElementsByTagName(n)[0];
+      a.async = 1;
+      a.src = d;
+      m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'https://cdn.sender.net/accounts_resources/universal.js', 'sender');
+    sender('f16e23f82b2989')
+  </script>
+</body>
+
 </html>
