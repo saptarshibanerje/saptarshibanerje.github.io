@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tic Tac Toe - Vanilla JS</title>
+        <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+        <link href="assets/css/main.css" rel="stylesheet">
+        <style>
+            body { background:#f5f6f8; }
+            .game-section { padding-top:130px; padding-bottom:60px; }
+            .game-card { background:#ffffff; border-radius:20px; padding:28px 30px 34px; box-shadow:0 8px 28px -6px rgba(22,34,55,0.15); margin:0 auto; max-width:560px; }
+            .game-card h1 { font-size:clamp(1.6rem, 3.5vw, 2.2rem); font-weight:700; margin:0 0 14px; text-align:center; letter-spacing:.5px; background:linear-gradient(90deg,#0d4d96,#28a5ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+            form#player-form { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:10px; }
+            form#player-form input[type=text]{ padding:6px 10px; border:1px solid #cfd6dd; border-radius:6px; font-size:.9rem; min-width:140px; }
+            form#player-form button[type=submit]{ background:#0d6efd; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:600; font-size:.9rem; }
+            form#player-form button[type=submit]:hover{ background:#0b5ed7; }
+            #status { text-align:center; font-size:1.05rem; font-weight:500; color:#152c43; min-height:1.4em; margin:4px 0 4px; }
+            .board-wrap { position:relative; width:100%; max-width:360px; margin:10px auto 2px; }
+            #game.board { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; width:100%; aspect-ratio:1/1; }
+            #game.board .cell { display:flex; align-items:center; justify-content:center; font-weight:700; font-size:clamp(2.2rem, 9vw, 3.3rem); background:#ffffff; border:2px solid #232d36; border-radius:8px; cursor:pointer; transition:.15s background,.09s transform; user-select:none; }
+            #game.board .cell:hover{ background:#f1f6fb; }
+            #game.board .cell:active{ transform:scale(.96); }
+            #win-line { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+            .game-actions { text-align:center; margin-top:14px; }
+            .game-actions #reset { background:#212529; color:#fff; border:none; padding:8px 22px; border-radius:8px; font-weight:600; font-size:.95rem; letter-spacing:.4px; }
+            .game-actions #reset:hover { background:#2f3438; }
+            @media (max-width:480px){ .game-card { padding:22px 20px 30px; } form#player-form input[type=text]{ flex:1 1 130px; } }
+        </style>
+</head>
+<body class="index-page">
+    <!-- site header (copied from index) -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+            <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+                <img src="assets/img/logo.png" alt="">
+                <h1 class="sitename">Saptarshi</h1>
+            </a>
+
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="/tic-tac-toe.html" class="active">Tic-Tac-Toe</a></li>
+                    <li><a href="/bubble-burst.html">Bubble Burst</a></li>
+                    <li><a href="/index.html">Home</a></li>
+                </ul>
+                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+            </nav>
+
+            <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
+
+        </div>
+    </header>
+
+    <main class="main page-content game-section">
+
+                <div class="game-card">
+                    <h1>Tic Tac Toe</h1>
+                    <form id="player-form">
+                        <input type="text" id="player1-name" placeholder="Player 1 Name" required>
+                        <input type="text" id="player2-name" placeholder="Player 2 Name" required>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;"> <input type="radio" name="symbol" value="X" checked> <span>P1: X</span> </label>
+                        <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;"> <input type="radio" name="symbol" value="O"> <span>P1: O</span> </label>
+                        <button type="submit">Start Game</button>
+                    </form>
+                    <div id="status">Enter names and start the game.</div>
+                    <div class="board-wrap">
+                        <div id="game" class="board"></div>
+                        <svg id="win-line" viewBox="0 0 300 300" preserveAspectRatio="none"></svg>
+                    </div>
+                    <div class="game-actions"><button id="reset">Restart Game</button></div>
+                </div>
+
+        <!-- vendor & main scripts for nav behavior -->
+        <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/js/main.js"></script>
+
+                <script>
+                    const game = document.getElementById('game');
+                    const status = document.getElementById('status');
+                    const resetBtn = document.getElementById('reset');
+                    const playerForm = document.getElementById('player-form');
+                    const player1Input = document.getElementById('player1-name');
+                    const player2Input = document.getElementById('player2-name');
+                    const winLine = document.getElementById('win-line');
+                    let board = Array(9).fill('');
+                    let currentPlayer = 'X';
+                    let gameActive = false;
+                    let winPattern = null;
+                    let player1 = '', player2 = '';
+                    let playerSymbol = { X:'', O:'' };
+
+                    const WIN_PATTERNS = [
+                        [0,1,2],[3,4,5],[6,7,8],
+                        [0,3,6],[1,4,7],[2,5,8],
+                        [0,4,8],[2,4,6]
+                    ];
+
+                    function renderBoard(){
+                        game.innerHTML='';
+                        for(let i=0;i<9;i++){
+                            const cell=document.createElement('div');
+                            cell.className='cell';
+                            cell.textContent=board[i];
+                            cell.addEventListener('click',()=>handleCellClick(i));
+                            game.appendChild(cell);
+                        }
+                        drawWinLine();
+                    }
+
+                    function drawWinLine(){
+                        winLine.innerHTML='';
+                        if(!winPattern) return;
+                        const cell=100; // using a 300x300 viewBox
+                        const [a,,c]=winPattern;
+                        const positions=[];
+                        for(let y=0;y<3;y++) for(let x=0;x<3;x++) positions.push([x*cell,y*cell]);
+                        const start=positions[a];
+                        const end=positions[c];
+                        const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+                        line.setAttribute('x1', start[0]+cell/2);
+                        line.setAttribute('y1', start[1]+cell/2);
+                        line.setAttribute('x2', end[0]+cell/2);
+                        line.setAttribute('y2', end[1]+cell/2);
+                        line.setAttribute('stroke', '#ff3b30');
+                        line.setAttribute('stroke-width', '10');
+                        line.setAttribute('stroke-linecap','round');
+                        winLine.appendChild(line);
+                    }
+
+                    function handleCellClick(i){
+                        if(!gameActive || board[i]) return;
+                        board[i]=currentPlayer;
+                        renderBoard();
+                        const win=checkWin();
+                        if(win){
+                            winPattern=win; drawWinLine();
+                            status.textContent=`${playerSymbol[currentPlayer]} (${currentPlayer}) wins!`;
+                            gameActive=false; return;
+                        }
+                        if(board.every(c=>c)){ status.textContent="It's a draw!"; gameActive=false; return; }
+                        currentPlayer = currentPlayer==='X'?'O':'X';
+                        status.textContent=`Turn: ${playerSymbol[currentPlayer]} (${currentPlayer})`;
+                    }
+
+                    function checkWin(){
+                        for(const pattern of WIN_PATTERNS){
+                            const [a,b,c]=pattern;
+                            if(board[a] && board[a]===board[b] && board[a]===board[c]) return pattern;
+                        }
+                        return null;
+                    }
+
+                    resetBtn.addEventListener('click', resetGame);
+                    function resetGame(){
+                        board=Array(9).fill(''); currentPlayer='X'; winPattern=null;
+                        if(player1&&player2){ gameActive=true; status.textContent=`Turn: ${playerSymbol[currentPlayer]} (${currentPlayer})`; }
+                        else { gameActive=false; status.textContent='Enter names and start the game.'; }
+                        renderBoard();
+                    }
+
+                    playerForm.addEventListener('submit', e=>{
+                        e.preventDefault();
+                        player1=player1Input.value.trim();
+                        player2=player2Input.value.trim();
+                        const symbol=playerForm.symbol.value;
+                        playerSymbol = symbol==='X' ? { X:player1, O:player2 } : { X:player2, O:player1 };
+                        board=Array(9).fill(''); currentPlayer='X'; winPattern=null; gameActive=true;
+                        status.textContent=`Turn: ${playerSymbol[currentPlayer]} (${currentPlayer})`;
+                        renderBoard();
+                    });
+
+                    renderBoard();
+                </script>
+
+        </div>
+    </main>
+
+</body>
+</html>

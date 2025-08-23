@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bubble Burst - Vanilla JS</title>
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+  <style>
+    :root{--bg:#081126;--panel:#0f2336;--accent:#33d7ff;--pop:#ff6b6b}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:#e6f3ff}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px}
+    h1{margin:0;font-size:20px}
+    #ui{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:10px;border-radius:10px;color:#cfefff;box-shadow:0 6px 24px rgba(0,0,0,0.4)}
+    #score{font-weight:700;font-size:18px}
+    #controls button{background:var(--accent);border:none;color:#02223a;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+    #controls button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#bfefff}
+    canvas{border-radius:10px;background:linear-gradient(180deg,#0b1830 0%, #081126 100%);box-shadow:0 12px 40px rgba(0,0,0,0.6);width:100%;height:auto;display:block}
+    #footer{opacity:0.8;font-size:13px;margin-top:6px;text-align:center}
+    .bar{height:8px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden}
+    .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#9affff);width:0%}
+  </style>
+</head>
+<body class="index-page">
+  <!-- header -->
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="assets/img/logo.png" alt="">
+        <h1 class="sitename">Saptarshi</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/tic-tac-toe.html">Tic-Tac-Toe</a></li>
+          <li><a href="/bubble-burst.html" class="active">Bubble Burst</a></li>
+          <li><a href="/index.html">Home</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
+
+    </div>
+  </header>
+
+  <main class="main page-content" style="padding-top:100px;">
+
+    <div class="wrap" style="max-width:980px;margin:0 auto;padding:20px;">
+      <h1>Bubble Burst</h1>
+      <div id="ui">
+        <div class="panel">
+          <div id="score">Score: 0</div>
+          <div id="time">Time: 60</div>
+          <div class="bar" style="margin-top:8px; width:200px"><i id="timebar"></i></div>
+        </div>
+        <div id="controls" class="panel" style="display:flex;gap:8px;align-items:center">
+          <button id="start">Start</button>
+          <button id="pause" class="secondary">Pause</button>
+          <button id="reset" class="secondary">Reset</button>
+          <button id="fullscreen" class="secondary">Fullscreen</button>
+          <label style="margin-left:10px;font-size:13px;opacity:0.9">Difficulty:
+            <select id="difficulty" style="margin-left:6px;padding:6px;border-radius:6px;background:transparent;color:#dff6ff;border:1px solid rgba(255,255,255,0.06)">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div style="width:100%;margin-top:16px;">
+        <canvas id="game" width="960" height="640"></canvas>
+      </div>
+
+      <div id="footer">Click bubbles to pop them. Larger bubbles give more points. Game lasts 60 seconds.</div>
+    </div>
+
+  </main>
+
+  <!-- vendor scripts -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script>
+  // Bubble Burst - vanilla JS canvas game (responsive)
+  (function(){
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const resetBtn = document.getElementById('reset');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const timebar = document.getElementById('timebar');
+    const difficultySelect = document.getElementById('difficulty');
+
+    const baseW = 960, baseH = 640; // logical base size for game math
+    let W = baseW, H = baseH;
+    let bubbles = [];
+    let particles = [];
+    let lastTime = 0;
+    let spawnTimer = 0;
+    let score = 0;
+    let gameDuration = 60; // seconds
+    let remaining = gameDuration;
+    let running = false;
+    let paused = false;
+    let difficulty = 'normal';
+    let timerInterval = null;
+    let showEndOverlay = false;
+    let finalScore = 0;
+
+    function rand(min, max){ return Math.random()*(max-min)+min }
+
+    class Bubble { constructor(x,y,r,vx,vy,color){ this.x=x;this.y=y;this.r=r;this.vx=vx;this.vy=vy;this.color=color;this.popped=false } update(dt){ this.x += this.vx*dt; this.y += this.vy*dt; } draw(ctx){ ctx.beginPath(); ctx.fillStyle = this.color; ctx.globalAlpha = 0.95; ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.stroke(); } }
+
+    class Particle{ constructor(x,y,vx,vy,life,color){ this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.life=life;this.max=life;this.color=color } update(dt){ this.x+=this.vx*dt; this.y+=this.vy*dt; this.life-=dt } draw(ctx){ if(this.life<=0) return; ctx.globalAlpha = Math.max(0, this.life/this.max); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x,this.y,Math.max(1, this.life*2),0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1 } }
+
+    function spawnBubble(){
+      const r = rand(12, 48) * (difficulty==='hard'?1.1: difficulty==='easy'?0.85:1);
+      const x = rand(r, W-r);
+      const y = H + r + rand(0, 60);
+      const vy = -rand(40,120) * (difficulty==='hard'?1.25: difficulty==='easy'?0.8:1);
+      const vx = rand(-20,20);
+      const hue = Math.floor(rand(160,320));
+      const color = `hsl(${hue}deg ${rand(60,90)}% ${rand(50,70)}% / 0.95)`;
+      bubbles.push(new Bubble(x,y,r,vx,vy,color));
+    }
+
+    function popBubble(bubble){
+      if(bubble.popped) return;
+      bubble.popped = true;
+      const pts = Math.round( (60 - bubble.r) * -0.6 + bubble.r * 0.6 );
+      score += Math.max(1, pts);
+      scoreEl.textContent = `Score: ${score}`;
+      for(let i=0;i<18;i++){
+        const angle = Math.PI*2 * Math.random();
+        const speed = rand(40,240) * (bubble.r/30);
+        const vx = Math.cos(angle)*speed;
+        const vy = Math.sin(angle)*speed;
+        const life = rand(0.4,1.0);
+        particles.push(new Particle(bubble.x, bubble.y, vx, vy, life, bubble.color));
+      }
+    }
+
+    function setCanvasSize(logicalW, logicalH){
+      const ratio = window.devicePixelRatio || 1;
+      canvas.style.width = logicalW + 'px';
+      canvas.style.height = logicalH + 'px';
+      canvas.width = Math.floor(logicalW * ratio);
+      canvas.height = Math.floor(logicalH * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      W = logicalW; H = logicalH;
+    }
+
+    function resizeCanvas(){
+      if(document.fullscreenElement === canvas){
+        setCanvasSize(window.innerWidth, window.innerHeight);
+      } else {
+        const containerWidth = Math.min(window.innerWidth - 40, 960);
+        const scale = containerWidth / baseW;
+        setCanvasSize(Math.round(baseW * scale), Math.round(baseH * scale));
+      }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    canvas.addEventListener('click', function(e){
+      if(!running || paused) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (W / rect.width);
+      const y = (e.clientY - rect.top) * (H / rect.height);
+      for(let i = bubbles.length-1; i>=0; i--){
+        const b = bubbles[i];
+        const dx = x - b.x, dy = y - b.y;
+        if(!b.popped && dx*dx + dy*dy <= b.r*b.r){
+          popBubble(b);
+          setTimeout(()=>{ const idx = bubbles.indexOf(b); if(idx>=0) bubbles.splice(idx,1); }, 10);
+          return;
+        }
+      }
+    });
+
+    function update(dt){
+      if(!running || paused) return;
+      spawnTimer += dt;
+      let spawnRate = difficulty==='easy'? 0.9 : difficulty==='hard'? 0.45 : 0.6;
+      spawnRate = Math.max(0.2, spawnRate - ( (gameDuration-remaining)/gameDuration )*0.25);
+      if(spawnTimer > spawnRate){ spawnTimer = 0; spawnBubble(); }
+      for(let i=bubbles.length-1;i>=0;i--){
+        const b = bubbles[i]; b.update(dt);
+        if(b.y + b.r < -60 || b.x < -100 || b.x > W+100){ bubbles.splice(i,1); }
+      }
+      for(let i=particles.length-1;i>=0;i--){ particles[i].update(dt); if(particles[i].life <= 0) particles.splice(i,1); }
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#0a1830'); g.addColorStop(1,'#061022');
+      ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+      for(const b of bubbles) b.draw(ctx);
+      for(const p of particles) p.draw(ctx);
+      if(showEndOverlay){ drawOverlay(); }
+    }
+
+    function gameLoop(ts){
+      if(!lastTime) lastTime = ts;
+      const dt = Math.min(0.05, (ts - lastTime)/1000);
+      lastTime = ts;
+      if(running && !paused){ update(dt); }
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function tickTimer(){ if(!running || paused) return; remaining = Math.max(0, remaining - 1); timeEl.textContent = `Time: ${remaining}`; timebar.style.width = `${(remaining/gameDuration)*100}%`; if(remaining <= 0){ endGame(); } }
+
+    function startGame(){ if(running) return; difficulty = difficultySelect.value; running = true; paused = false; lastTime = 0; spawnTimer = 0; score = 0; scoreEl.textContent = `Score: ${score}`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; showEndOverlay = false; finalScore = 0; timerInterval = setInterval(tickTimer, 1000); }
+    function pauseGame(){ if(!running) return; paused = !paused; pauseBtn.textContent = paused? 'Resume' : 'Pause'; }
+    function resetGame(){ running = false; paused = false; clearInterval(timerInterval); timerInterval = null; score = 0; scoreEl.textContent = `Score: 0`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; pauseBtn.textContent = 'Pause'; showEndOverlay = false; finalScore = 0; }
+    function endGame(){ running = false; clearInterval(timerInterval); timerInterval = null; finalScore = score; showEndOverlay = true; if(document.fullscreenElement){ document.exitFullscreen?.(); } }
+
+    function drawOverlay(){ ctx.fillStyle = 'rgba(2,8,18,0.7)'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = Math.max(24, Math.floor(W * 0.04)) + 'px sans-serif'; ctx.fillText(`Time's up!`, W/2, H/2 - 30); ctx.font = Math.max(18, Math.floor(W * 0.03)) + 'px sans-serif'; ctx.fillText(`Final score: ${finalScore}`, W/2, H/2 + 6); ctx.font = Math.max(14, Math.floor(W * 0.02)) + 'px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText(`Click Reset to play again`, W/2, H/2 + 46); }
+
+    startBtn.addEventListener('click', ()=>{ startGame(); });
+    pauseBtn.addEventListener('click', ()=>{ pauseGame(); });
+    resetBtn.addEventListener('click', ()=>{ resetGame(); });
+    const fullscreenBtn = document.getElementById('fullscreen');
+    fullscreenBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement){ canvas.requestFullscreen?.(); } else { document.exitFullscreen?.(); } });
+    document.addEventListener('fullscreenchange', ()=>{ if(document.fullscreenElement === canvas){ setCanvasSize(window.innerWidth, window.innerHeight); fullscreenBtn.textContent = 'Exit Fullscreen'; } else { resizeCanvas(); fullscreenBtn.textContent = 'Fullscreen'; } });
+
+    function authoring(){ for(let i=0;i<6;i++){ const r = rand(18,36); const x = rand(r, W-r); const y = rand(H*0.4, H*0.95); bubbles.push(new Bubble(x,y,r, rand(-10,10), rand(-20,-60), `hsl(${rand(160,320)}deg ${rand(60,85)}% ${rand(50,70)}% / 0.9)`)); } }
+
+    // initial setup
+    resizeCanvas();
+    authoring();
+    requestAnimationFrame(gameLoop);
+  })();
+  </script>
+
+</body>
+</html>
+function drawOverlay(){
+  // dim background
+  ctx.fillStyle = 'rgba(2,8,18,0.7)'; ctx.fillRect(0,0,W,H);
+  // main text
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+  ctx.font = Math.max(24, Math.floor(W * 0.04)) + 'px sans-serif';
+  ctx.fillText(`Time's up!`, W/2, H/2 - 30);
+  ctx.font = Math.max(18, Math.floor(W * 0.03)) + 'px sans-serif';
+  ctx.fillText(`Final score: ${finalScore}`, W/2, H/2 + 6);
+  // restart hint
+  ctx.font = Math.max(14, Math.floor(W * 0.02)) + 'px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(`Click Reset to play again`, W/2, H/2 + 46);
+}
+
+startBtn.addEventListener('click', ()=>{ startGame(); });
+pauseBtn.addEventListener('click', ()=>{ pauseGame(); });
+resetBtn.addEventListener('click', ()=>{ resetGame(); });
+const fullscreenBtn = document.getElementById('fullscreen');
+fullscreenBtn.addEventListener('click', ()=>{
+  if(!document.fullscreenElement){
+    // request fullscreen on the canvas container for immersive view
+    canvas.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+});
+
+document.addEventListener('fullscreenchange', ()=>{
+  if(document.fullscreenElement === canvas){
+    // enter fullscreen: match window size
+    setCanvasSize(window.innerWidth, window.innerHeight);
+    fullscreenBtn.textContent = 'Exit Fullscreen';
+  } else {
+    // exit fullscreen: restore base size
+    setCanvasSize(baseW, baseH);
+    fullscreenBtn.textContent = 'Fullscreen';
+  }
+});
+
+authoring();
+requestAnimationFrame(gameLoop);
+
+// small helper to initialize friendly starter bubbles
+function authoring(){
+  // place some gentle bubbles when idle
+  for(let i=0;i<6;i++){
+    const r = rand(18,36);
+    const x = rand(r, W-r);
+    const y = rand(H*0.4, H*0.95);
+    bubbles.push(new Bubble(x,y,r, rand(-10,10), rand(-20,-60), `hsl(${rand(160,320)}deg ${rand(60,85)}% ${rand(50,70)}% / 0.9)`));
+  }
+}
+
+// Make canvas crisp on high-DPI
+// Setup canvas logical size and scale for DPI so game math uses baseW/baseH
+(function setupCanvas(){
+  const ratio = window.devicePixelRatio || 1;
+  canvas.style.width = baseW + 'px';
+  canvas.style.height = baseH + 'px';
+  canvas.width = Math.floor(baseW * ratio);
+  canvas.height = Math.floor(baseH * ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0); // scale drawing operations
+  W = baseW; H = baseH;
+})();
+
+</script>
+</body>
+  </head>
+  <body class="index-page">
++    <!-- header -->
++    <header id="header" class="header d-flex align-items-center fixed-top">
++      <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
++
++        <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
++          <img src="assets/img/logo.png" alt="">
++          <h1 class="sitename">Saptarshi</h1>
++        </a>
++
++        <nav id="navmenu" class="navmenu">
++          <ul>
++            <li><a href="/tic-tac-toe.html">Tic-Tac-Toe</a></li>
++            <li><a href="/bubble-burst.html" class="active">Bubble Burst</a></li>
++            <li><a href="/index.html">Home</a></li>
++          </ul>
++          <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
++        </nav>
++
++        <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
++
++      </div>
++    </header>
++
++    <main class="main page-content" style="padding-top:100px;">
++
++      <div class="wrap" style="max-width:980px;margin:0 auto;padding:20px;">
++        <h1>Bubble Burst</h1>
+@@

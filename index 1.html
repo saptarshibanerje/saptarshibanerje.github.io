@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Puppet Pop — Marionette Balloon Game</title>
+  <style>
+    :root{
+      --stage-bg: #0f172a;       /* slate-900 */
+      --floor: #1e293b;          /* slate-800 */
+      --accent: #eab308;         /* amber-500 */
+      --text: #e2e8f0;           /* slate-200 */
+      --muted: #94a3b8;          /* slate-400 */
+      --puppet: #cbd5e1;         /* slate-300 */
+      --balloon1: #60a5fa;       /* blue-400 */
+      --balloon2: #f472b6;       /* pink-400 */
+      --balloon3: #34d399;       /* emerald-400 */
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 600px at 50% 20%, #111827, #0b1022);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 16px 16px auto 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+    .pill {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 600;
+    }
+    .hint {
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    #stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Top bar for strings */
+    .rig {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(900px, 90vw);
+      height: 24px;
+      background: linear-gradient(#181f39, #0f162c);
+      border-bottom: 2px solid #111827;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      border-radius: 0 0 12px 12px;
+      z-index: 2;
+    }
+
+    /* Floor */
+    .floor {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 90px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.35) 20%, #0b0f1e 60%),
+                  repeating-linear-gradient(90deg, #121a33 0 32px, #0e1427 32px 64px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 1;
+    }
+
+    /* SVG strings overlay */
+    #strings {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+    #strings line {
+      stroke: rgba(255,255,255,0.5);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    /* Puppet container that moves/jumps */
+    #puppet {
+      position: absolute;
+      top: 38%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 280px;
+      z-index: 4;
+    }
+
+    /* Pieces */
+    .piece {
+      position: absolute;
+      background: var(--puppet);
+      border: 2px solid rgba(0,0,0,0.25);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.12);
+    }
+
+    .head {
+      width: 64px; height: 64px; border-radius: 50%;
+      top: 0; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(circle at 35% 35%, #f8fafc, #cbd5e1 70%);
+    }
+    .eye { position: absolute; top: 24px; width: 8px; height: 8px; background: #0f172a; border-radius: 50%; }
+    .eye.left { left: 20px; }
+    .eye.right { right: 20px; }
+    .smile { position: absolute; top: 42px; left: 50%; width: 30px; height: 14px; border: 3px solid #0f172a; border-top: none; border-radius: 0 0 20px 20px; transform: translateX(-50%); }
+
+    .body {
+      width: 84px; height: 122px; top: 64px; left: 50%; transform: translateX(-50%);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #e5e7eb, #cbd5e1);
+    }
+    .button {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%;
+      left: 50%; transform: translateX(-50%);
+      background: var(--accent); border: 2px solid rgba(0,0,0,0.25);
+    }
+    .button.b1 { top: 84px; }
+    .button.b2 { top: 110px; }
+    .button.b3 { top: 136px; }
+
+    .arm {
+      width: 22px; height: 92px;
+      top: 78px;
+      background: linear-gradient(180deg, #e2e8f0, #cbd5e1);
+      transform-origin: 50% 8px; /* shoulder pivot */
+      border-radius: 12px;
+    }
+    .arm.left { left: calc(50% - 54px); }
+    .arm.right { left: calc(50% + 32px); }
+
+    /* A little “hand” */
+    .hand {
+      position: absolute; bottom: -8px; left: 50%;
+      width: 24px; height: 24px; transform: translateX(-50%);
+      border-radius: 50%;
+      background: #f1f5f9; border: 2px solid rgba(0,0,0,0.25);
+    }
+
+    .leg {
+      width: 26px; height: 116px;
+      top: 182px;
+      transform-origin: 50% 10px; /* hip pivot */
+      border-radius: 14px;
+      background: linear-gradient(180deg, #e2e8f0, #cbd5e1);
+    }
+    .leg.left  { left: calc(50% - 24px); }
+    .leg.right { left: calc(50% - 2px); }
+
+    .shoe {
+      position: absolute; bottom: -10px; left: 50%;
+      width: 38px; height: 18px; transform: translateX(-50%);
+      border-radius: 12px 12px 6px 6px;
+      background: #475569; border: 2px solid rgba(0,0,0,0.4);
+    }
+
+    /* Balloons */
+    .balloon {
+      position: absolute;
+      width: 36px; height: 44px; border-radius: 50% 50% 45% 45%;
+      background: var(--balloon1);
+      box-shadow: inset 0 8px 14px rgba(255,255,255,0.45);
+      border: 2px solid rgba(0,0,0,0.2);
+      transform: translate(-50%, -50%);
+    }
+    .balloon.color2 { background: var(--balloon2); }
+    .balloon.color3 { background: var(--balloon3); }
+    .knot {
+      position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+      width: 10px; height: 8px; border-radius: 50%;
+      background: rgba(0,0,0,0.2);
+    }
+    .string {
+      position: absolute; top: 43px; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 40px; background: rgba(255,255,255,0.3);
+    }
+    .pop {
+      animation: pop 220ms ease-out forwards;
+    }
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; filter: saturate(1); }
+      100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; filter: saturate(0); }
+    }
+
+    /* Footer mini-instructions */
+    .help {
+      position: fixed;
+      bottom: 10px; left: 50%;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-size: 14px;
+      opacity: 0.9;
+      text-align: center;
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="pill">Score: <span id="score">0</span></div>
+    <div class="pill">Time: <span id="time">60</span>s</div>
+    <div class="pill hint">A/D move • Space/W jump • Q/E arms • Z/C legs • R reset</div>
+  </div>
+
+  <div id="stage">
+    <div class="rig"></div>
+    <svg id="strings" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <line id="s-head"  x1="0" y1="0" x2="0" y2="0"></line>
+      <line id="s-left"  x1="0" y1="0" x2="0" y2="0"></line>
+      <line id="s-right" x1="0" y1="0" x2="0" y2="0"></line>
+    </svg>
+
+    <div id="puppet">
+      <div class="head piece" id="head">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="smile"></div>
+      </div>
+
+      <div class="body piece">
+        <div class="button b1"></div>
+        <div class="button b2"></div>
+        <div class="button b3"></div>
+      </div>
+
+      <div class="arm piece left" id="armL">
+        <div class="hand" id="handL"></div>
+      </div>
+      <div class="arm piece right" id="armR">
+        <div class="hand" id="handR"></div>
+      </div>
+
+      <div class="leg piece left" id="legL">
+        <div class="shoe"></div>
+      </div>
+      <div class="leg piece right" id="legR">
+        <div class="shoe"></div>
+      </div>
+    </div>
+
+    <div class="floor"></div>
+  </div>
+
+  <div class="help">Pop as many balloons as you can in 60 seconds!</div>
+
+  <script src="game.js"></script>
+</body>
+</html>
