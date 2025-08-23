@@ -27,6 +27,39 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
 
+  <style>
+    /* Prevent page-level scrolling and keep header/footer visible
+       Main area fills the remaining viewport and content is centered. */
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* stop page from scrolling */
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    /* header and footer keep their natural height */
+    header.header, footer.footer {
+      flex: 0 0 auto;
+    }
+    /* main fills the remaining height and prevents internal overflow */
+    main.main {
+      flex: 1 1 auto;
+      min-height: 0; /* allow flex child to shrink properly */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    /* keep page title and starter content centered and constrained */
+    .page-title, .starter-section {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+  </style>
+
   <!-- =======================================================
   * Template Name: iLanding
   * Template URL: https://bootstrapmade.com/ilanding-bootstrap-landing-page-template/

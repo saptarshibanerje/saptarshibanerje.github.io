@@ -1,32 +1,132 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Bubble Burst - Vanilla JS</title>
+  <title>Bubble Burst</title>
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/css/main.css" rel="stylesheet">
   <style>
-    :root{--bg:#081126;--panel:#0f2336;--accent:#33d7ff;--pop:#ff6b6b}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:#e6f3ff}
-    .wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px}
-    h1{margin:0;font-size:20px}
-    #ui{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
-    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:10px;border-radius:10px;color:#cfefff;box-shadow:0 6px 24px rgba(0,0,0,0.4)}
-    #score{font-weight:700;font-size:18px}
-    #controls button{background:var(--accent);border:none;color:#02223a;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-    #controls button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#bfefff}
-    canvas{border-radius:10px;background:linear-gradient(180deg,#0b1830 0%, #081126 100%);box-shadow:0 12px 40px rgba(0,0,0,0.6);width:100%;height:auto;display:block}
-    #footer{opacity:0.8;font-size:13px;margin-top:6px;text-align:center}
-    .bar{height:8px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden}
-    .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#9affff);width:0%}
+    /* Layout / scroll control */
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: Inter, system-ui, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #061022 0%, #071428 60%);
+      color: #e6f3ff;
+    }
+
+    :root{
+      --bg: #081126;
+      --panel: rgba(18,34,48,0.6);
+      --accent: #33d7ff;
+      --accent-2: #7af0ff;
+      --muted: rgba(255,255,255,0.12);
+      --header-height: 0px; /* updated by JS to avoid header overlap on small screens */
+    }
+
+  /* header spacing handled separately; main fills remaining area. On narrow/medium viewports
+     align items to top to avoid large vertical gaps under the header. On wide screens keep
+     the centered layout. padding uses --header-height set by JS */
+  main.main{ flex:1 1 auto; min-height:0; display:flex; align-items:flex-start; justify-content:center; padding-top: calc(var(--header-height) + 8px) }
+
+  /* Re-center the game container only on very large desktop widths where vertical centering is desired.
+     Avoid centering for tablet widths (e.g. iPad Pro) to prevent large gaps under the header. */
+  @media (min-width:1200px){
+    main.main{ align-items:center }
+  }
+
+    .wrap{ width:100%; max-width:980px; margin:0 auto; padding:24px; box-sizing:border-box }
+
+    h1{ margin:0 0 6px 0; font-size:20px; letter-spacing:0.2px }
+
+  /* Top UI: score + controls - keep single line, allow horizontal scroll if needed */
+  #ui{ position:relative; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:nowrap; margin-bottom:8px; overflow-x:auto; -webkit-overflow-scrolling:touch }
+
+    .panel{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid var(--muted); padding:12px 14px; border-radius:12px; color:#dff6ff;
+      box-shadow: 0 10px 30px rgba(2,8,18,0.6); backdrop-filter: blur(6px);
+    }
+
+    /* Score/time styling */
+    #score, #time{ font-weight:700; color:#e8fbff }
+    #score{ font-size:18px }
+    #time{ font-size:14px; opacity:0.9 }
+
+    /* Controls: prettier buttons */
+  #controls{ display:flex; gap:10px; align-items:center; flex-wrap:nowrap; overflow-x:auto }
+  #controls button{ background:var(--panel); border:none; color:var(--accent-2); padding:8px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 6px 18px rgba(2,8,18,0.5); transition:transform .12s ease, box-shadow .12s ease; white-space:nowrap; min-width:84px }
+    #controls button:hover{ transform:translateY(-2px); box-shadow:0 10px 30px rgba(2,8,18,0.6) }
+    #controls button.secondary{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:#cdeff6 }
+    #controls button.primary{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:#02223a }
+
+    /* Difficulty select compact */
+    #controls select{ background:transparent; border:none; color:#dff6ff; padding:6px; outline:none }
+
+  /* small-screen hamburger toggle (hidden by default) */
+  .controls-toggle{ display:none; align-items:center; justify-content:center; background:var(--panel); border:none; color:var(--accent-2); padding:8px; border-radius:10px; margin-left:8px; cursor:pointer }
+  .controls-toggle i{ font-size:18px }
+  .controls-toggle{ transition:background .18s ease, color .18s ease, transform .12s ease }
+  .controls-toggle.active{ background: var(--accent); color: #02223a; transform:scale(1.02) }
+  .controls-toggle.active i{ transform:rotate(90deg); }
+
+    /* Canvas container style */
+    .canvas-stage{ width:100%; max-width:720px; margin:8px auto 18px; border-radius:14px; overflow:hidden; box-shadow: 0 30px 80px rgba(2,8,18,0.6); }
+    canvas{ display:block; width:100%; height:auto; background:linear-gradient(180deg,#071425 0%, #061022 100%); }
+
+  /* Game container: make the UI + canvas + footer scrollable when needed */
+  .game-container { width:100%; overflow:auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - var(--header-height) - 40px); }
+
+  /* ensure fixed header sits above content */
+  header.fixed-top { z-index: 1050; }
+
+    /* Footer */
+    #footer{ text-align:center; opacity:0.85; font-size:13px; margin-top:8px }
+
+    /* Timebar */
+    .bar{ height:8px; background:rgba(255,255,255,0.04); border-radius:8px; overflow:hidden }
+    .bar>i{ display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:0%; transition:width .35s ease }
+
+    /* Responsive tweaks */
+  @media (max-width:760px){
+      /* allow page scrolling on small devices and keep controls in a single horizontal row (scrollable) */
+      html, body { overflow: auto; }
+  main.main { display:block; padding-top: calc(var(--header-height) + 8px); overflow: visible; }
+      .wrap{ padding:12px }
+  /* keep #ui as a single row and allow horizontal scroll if content overflows */
+  #ui{ flex-wrap:nowrap; align-items:center; justify-content:space-between; overflow-x:auto }
+  /* show hamburger toggle and hide inline controls by default */
+  .controls-toggle{ display:inline-flex }
+  #controls{ display:none }
+  /* overlay dropdown: do not affect document flow when opened */
+  #controls.open{ display:flex !important; flex-direction:column; position:absolute; top: calc(100% + 8px); right:8px; left:auto; width: min(320px, 92vw); max-height: calc(100vh - var(--header-height) - 120px); overflow:auto; padding:10px; z-index:2060; box-shadow: 0 18px 48px rgba(2,8,18,0.7); background: linear-gradient(180deg, rgba(6,18,34,0.95), rgba(6,16,34,0.92)); border-radius:12px }
+  /* ensure inner panel spacing works inside the dropdown */
+  #controls.open .panel{ background:transparent; box-shadow:none; border:none; padding:0; display:block }
+      /* controls remain inline and scroll horizontally when needed */
+      #controls{ flex-wrap:nowrap; gap:8px; overflow-x:auto }
+      #controls button{ padding:10px 12px; min-width:80px }
+      .canvas-stage{ max-width:100%; margin:10px 0 }
+      canvas{ border-radius:10px }
+      /* make sure the game container uses the full available height under the header and remains scrollable */
+      .game-container { max-height: calc(100vh - var(--header-height) - 24px); }
+    }
   </style>
 </head>
+
 <body class="index-page">
   <!-- header -->
   <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    <div
+      class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
       <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
         <img src="assets/img/logo.png" alt="">
@@ -37,46 +137,51 @@
         <ul>
           <li><a href="/tic-tac-toe.html">Tic-Tac-Toe</a></li>
           <li><a href="/bubble-burst.html" class="active">Bubble Burst</a></li>
-          <li><a href="/index.html">Home</a></li>
+          
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
-      <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
+      <a class="btn-getstarted" href="javascript:void(0)" id="show-contact-popup">Get Started</a>
 
     </div>
   </header>
 
-  <main class="main page-content" style="padding-top:100px;">
+  <main class="main page-content">
 
     <div class="wrap" style="max-width:980px;margin:0 auto;padding:20px;">
-      <h1>Bubble Burst</h1>
-      <div id="ui">
+     
+  <div class="game-container">
+  <div id="ui">
         <div class="panel">
           <div id="score">Score: 0</div>
           <div id="time">Time: 60</div>
           <div class="bar" style="margin-top:8px; width:200px"><i id="timebar"></i></div>
         </div>
-        <div id="controls" class="panel" style="display:flex;gap:8px;align-items:center">
+  <div id="controls" class="panel">
           <button id="start">Start</button>
           <button id="pause" class="secondary">Pause</button>
           <button id="reset" class="secondary">Reset</button>
           <button id="fullscreen" class="secondary">Fullscreen</button>
           <label style="margin-left:10px;font-size:13px;opacity:0.9">Difficulty:
-            <select id="difficulty" style="margin-left:6px;padding:6px;border-radius:6px;background:transparent;color:#dff6ff;border:1px solid rgba(255,255,255,0.06)">
+            <select id="difficulty"
+              style="margin-left:6px;padding:6px;border-radius:6px;background:transparent;color:#dff6ff;border:1px solid rgba(255,255,255,0.06)">
               <option value="easy">Easy</option>
               <option value="normal" selected>Normal</option>
               <option value="hard">Hard</option>
             </select>
           </label>
         </div>
+  <!-- hamburger toggle for small screens -->
+  <button class="controls-toggle" id="controlsToggle" aria-expanded="false" aria-label="Open controls"><i class="bi bi-list"></i></button>
       </div>
 
-      <div style="width:100%;margin-top:16px;">
-        <canvas id="game" width="960" height="640"></canvas>
+      <div class="canvas-stage">
+        <canvas id="game" width="720" height="480"></canvas>
       </div>
 
       <div id="footer">Click bubbles to pop them. Larger bubbles give more points. Game lasts 60 seconds.</div>
+      </div>
     </div>
 
   </main>
@@ -86,259 +191,252 @@
   <script src="assets/js/main.js"></script>
 
   <script>
-  // Bubble Burst - vanilla JS canvas game (responsive)
-  (function(){
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const startBtn = document.getElementById('start');
-    const pauseBtn = document.getElementById('pause');
-    const resetBtn = document.getElementById('reset');
-    const scoreEl = document.getElementById('score');
-    const timeEl = document.getElementById('time');
-    const timebar = document.getElementById('timebar');
-    const difficultySelect = document.getElementById('difficulty');
+    // Bubble Burst - vanilla JS canvas game (responsive)
+    (function () {
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById('start');
+      const pauseBtn = document.getElementById('pause');
+      const resetBtn = document.getElementById('reset');
+      const scoreEl = document.getElementById('score');
+      const timeEl = document.getElementById('time');
+      const timebar = document.getElementById('timebar');
+      const difficultySelect = document.getElementById('difficulty');
 
-    const baseW = 960, baseH = 640; // logical base size for game math
-    let W = baseW, H = baseH;
-    let bubbles = [];
-    let particles = [];
-    let lastTime = 0;
-    let spawnTimer = 0;
-    let score = 0;
-    let gameDuration = 60; // seconds
-    let remaining = gameDuration;
-    let running = false;
-    let paused = false;
-    let difficulty = 'normal';
-    let timerInterval = null;
-    let showEndOverlay = false;
-    let finalScore = 0;
+  const baseW = 720, baseH = 480; // logical base size for game math
+      let W = baseW, H = baseH;
+      let bubbles = [];
+      let particles = [];
+      let lastTime = 0;
+      let spawnTimer = 0;
+      let score = 0;
+      let gameDuration = 60; // seconds
+      let remaining = gameDuration;
+      let running = false;
+      let paused = false;
+      let difficulty = 'normal';
+      let timerInterval = null;
+      let showEndOverlay = false;
+      let finalScore = 0;
 
-    function rand(min, max){ return Math.random()*(max-min)+min }
+      function rand(min, max) { return Math.random() * (max - min) + min }
 
-    class Bubble { constructor(x,y,r,vx,vy,color){ this.x=x;this.y=y;this.r=r;this.vx=vx;this.vy=vy;this.color=color;this.popped=false } update(dt){ this.x += this.vx*dt; this.y += this.vy*dt; } draw(ctx){ ctx.beginPath(); ctx.fillStyle = this.color; ctx.globalAlpha = 0.95; ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.stroke(); } }
+      class Bubble { constructor(x, y, r, vx, vy, color) { this.x = x; this.y = y; this.r = r; this.vx = vx; this.vy = vy; this.color = color; this.popped = false } update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; } draw(ctx) { ctx.beginPath(); ctx.fillStyle = this.color; ctx.globalAlpha = 0.95; ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.stroke(); } }
 
-    class Particle{ constructor(x,y,vx,vy,life,color){ this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.life=life;this.max=life;this.color=color } update(dt){ this.x+=this.vx*dt; this.y+=this.vy*dt; this.life-=dt } draw(ctx){ if(this.life<=0) return; ctx.globalAlpha = Math.max(0, this.life/this.max); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x,this.y,Math.max(1, this.life*2),0,Math.PI*2); ctx.fill(); ctx.globalAlpha = 1 } }
+      class Particle { constructor(x, y, vx, vy, life, color) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.life = life; this.max = life; this.color = color } update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt } draw(ctx) { if (this.life <= 0) return; ctx.globalAlpha = Math.max(0, this.life / this.max); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, Math.max(1, this.life * 2), 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1 } }
 
-    function spawnBubble(){
-      const r = rand(12, 48) * (difficulty==='hard'?1.1: difficulty==='easy'?0.85:1);
-      const x = rand(r, W-r);
-      const y = H + r + rand(0, 60);
-      const vy = -rand(40,120) * (difficulty==='hard'?1.25: difficulty==='easy'?0.8:1);
-      const vx = rand(-20,20);
-      const hue = Math.floor(rand(160,320));
-      const color = `hsl(${hue}deg ${rand(60,90)}% ${rand(50,70)}% / 0.95)`;
-      bubbles.push(new Bubble(x,y,r,vx,vy,color));
-    }
-
-    function popBubble(bubble){
-      if(bubble.popped) return;
-      bubble.popped = true;
-      const pts = Math.round( (60 - bubble.r) * -0.6 + bubble.r * 0.6 );
-      score += Math.max(1, pts);
-      scoreEl.textContent = `Score: ${score}`;
-      for(let i=0;i<18;i++){
-        const angle = Math.PI*2 * Math.random();
-        const speed = rand(40,240) * (bubble.r/30);
-        const vx = Math.cos(angle)*speed;
-        const vy = Math.sin(angle)*speed;
-        const life = rand(0.4,1.0);
-        particles.push(new Particle(bubble.x, bubble.y, vx, vy, life, bubble.color));
+      function spawnBubble() {
+        const r = rand(12, 48) * (difficulty === 'hard' ? 1.1 : difficulty === 'easy' ? 0.85 : 1);
+        const x = rand(r, W - r);
+        const y = H + r + rand(0, 60);
+        const vy = -rand(40, 120) * (difficulty === 'hard' ? 1.25 : difficulty === 'easy' ? 0.8 : 1);
+        const vx = rand(-20, 20);
+        const hue = Math.floor(rand(160, 320));
+        const color = `hsl(${hue}deg ${rand(60, 90)}% ${rand(50, 70)}% / 0.95)`;
+        bubbles.push(new Bubble(x, y, r, vx, vy, color));
       }
-    }
 
-    function setCanvasSize(logicalW, logicalH){
-      const ratio = window.devicePixelRatio || 1;
-      canvas.style.width = logicalW + 'px';
-      canvas.style.height = logicalH + 'px';
-      canvas.width = Math.floor(logicalW * ratio);
-      canvas.height = Math.floor(logicalH * ratio);
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      W = logicalW; H = logicalH;
-    }
-
-    function resizeCanvas(){
-      if(document.fullscreenElement === canvas){
-        setCanvasSize(window.innerWidth, window.innerHeight);
-      } else {
-        const containerWidth = Math.min(window.innerWidth - 40, 960);
-        const scale = containerWidth / baseW;
-        setCanvasSize(Math.round(baseW * scale), Math.round(baseH * scale));
-      }
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-
-    canvas.addEventListener('click', function(e){
-      if(!running || paused) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (W / rect.width);
-      const y = (e.clientY - rect.top) * (H / rect.height);
-      for(let i = bubbles.length-1; i>=0; i--){
-        const b = bubbles[i];
-        const dx = x - b.x, dy = y - b.y;
-        if(!b.popped && dx*dx + dy*dy <= b.r*b.r){
-          popBubble(b);
-          setTimeout(()=>{ const idx = bubbles.indexOf(b); if(idx>=0) bubbles.splice(idx,1); }, 10);
-          return;
+      function popBubble(bubble) {
+        if (bubble.popped) return;
+        bubble.popped = true;
+        const pts = Math.round((60 - bubble.r) * -0.6 + bubble.r * 0.6);
+        score += Math.max(1, pts);
+        scoreEl.textContent = `Score: ${score}`;
+        for (let i = 0; i < 18; i++) {
+          const angle = Math.PI * 2 * Math.random();
+          const speed = rand(40, 240) * (bubble.r / 30);
+          const vx = Math.cos(angle) * speed;
+          const vy = Math.sin(angle) * speed;
+          const life = rand(0.4, 1.0);
+          particles.push(new Particle(bubble.x, bubble.y, vx, vy, life, bubble.color));
         }
       }
-    });
 
-    function update(dt){
-      if(!running || paused) return;
-      spawnTimer += dt;
-      let spawnRate = difficulty==='easy'? 0.9 : difficulty==='hard'? 0.45 : 0.6;
-      spawnRate = Math.max(0.2, spawnRate - ( (gameDuration-remaining)/gameDuration )*0.25);
-      if(spawnTimer > spawnRate){ spawnTimer = 0; spawnBubble(); }
-      for(let i=bubbles.length-1;i>=0;i--){
-        const b = bubbles[i]; b.update(dt);
-        if(b.y + b.r < -60 || b.x < -100 || b.x > W+100){ bubbles.splice(i,1); }
+      function setCanvasSize(logicalW, logicalH) {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.style.width = logicalW + 'px';
+        canvas.style.height = logicalH + 'px';
+        canvas.width = Math.floor(logicalW * ratio);
+        canvas.height = Math.floor(logicalH * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        W = logicalW; H = logicalH;
       }
-      for(let i=particles.length-1;i>=0;i--){ particles[i].update(dt); if(particles[i].life <= 0) particles.splice(i,1); }
-    }
 
-    function draw(){
-      ctx.clearRect(0,0,W,H);
-      const g = ctx.createLinearGradient(0,0,0,H);
-      g.addColorStop(0,'#0a1830'); g.addColorStop(1,'#061022');
-      ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-      for(const b of bubbles) b.draw(ctx);
-      for(const p of particles) p.draw(ctx);
-      if(showEndOverlay){ drawOverlay(); }
-    }
+      function resizeCanvas() {
+        if (document.fullscreenElement === canvas) {
+          setCanvasSize(window.innerWidth, window.innerHeight);
+        } else {
+          // use baseW as the maximum logical width so the canvas scales down on mobile
+          const maxContainer = Math.min(window.innerWidth - 40, baseW);
+          const scale = Math.max(0.4, maxContainer / baseW);
+          setCanvasSize(Math.round(baseW * scale), Math.round(baseH * scale));
+        }
+      }
 
-    function gameLoop(ts){
-      if(!lastTime) lastTime = ts;
-      const dt = Math.min(0.05, (ts - lastTime)/1000);
-      lastTime = ts;
-      if(running && !paused){ update(dt); }
-      draw();
+      window.addEventListener('resize', resizeCanvas);
+
+      canvas.addEventListener('click', function (e) {
+        if (!running || paused) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (W / rect.width);
+        const y = (e.clientY - rect.top) * (H / rect.height);
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i];
+          const dx = x - b.x, dy = y - b.y;
+          if (!b.popped && dx * dx + dy * dy <= b.r * b.r) {
+            popBubble(b);
+            setTimeout(() => { const idx = bubbles.indexOf(b); if (idx >= 0) bubbles.splice(idx, 1); }, 10);
+            return;
+          }
+        }
+      });
+
+      function update(dt) {
+        if (!running || paused) return;
+        spawnTimer += dt;
+        let spawnRate = difficulty === 'easy' ? 0.9 : difficulty === 'hard' ? 0.45 : 0.6;
+        spawnRate = Math.max(0.2, spawnRate - ((gameDuration - remaining) / gameDuration) * 0.25);
+        if (spawnTimer > spawnRate) { spawnTimer = 0; spawnBubble(); }
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+          const b = bubbles[i]; b.update(dt);
+          if (b.y + b.r < -60 || b.x < -100 || b.x > W + 100) { bubbles.splice(i, 1); }
+        }
+        for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(dt); if (particles[i].life <= 0) particles.splice(i, 1); }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#0a1830'); g.addColorStop(1, '#061022');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        for (const b of bubbles) b.draw(ctx);
+        for (const p of particles) p.draw(ctx);
+        if (showEndOverlay) { drawOverlay(); }
+      }
+
+      function gameLoop(ts) {
+        if (!lastTime) lastTime = ts;
+        const dt = Math.min(0.05, (ts - lastTime) / 1000);
+        lastTime = ts;
+        if (running && !paused) { update(dt); }
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function tickTimer() { if (!running || paused) return; remaining = Math.max(0, remaining - 1); timeEl.textContent = `Time: ${remaining}`; timebar.style.width = `${(remaining / gameDuration) * 100}%`; if (remaining <= 0) { endGame(); } }
+
+      function startGame() { if (running) return; difficulty = difficultySelect.value; running = true; paused = false; lastTime = 0; spawnTimer = 0; score = 0; scoreEl.textContent = `Score: ${score}`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; showEndOverlay = false; finalScore = 0; timerInterval = setInterval(tickTimer, 1000); }
+      function pauseGame() { if (!running) return; paused = !paused; pauseBtn.textContent = paused ? 'Resume' : 'Pause'; }
+      function resetGame() { running = false; paused = false; clearInterval(timerInterval); timerInterval = null; score = 0; scoreEl.textContent = `Score: 0`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; pauseBtn.textContent = 'Pause'; showEndOverlay = false; finalScore = 0; }
+      function endGame() { running = false; clearInterval(timerInterval); timerInterval = null; finalScore = score; showEndOverlay = true; if (document.fullscreenElement) { document.exitFullscreen?.(); } }
+
+      function drawOverlay() { ctx.fillStyle = 'rgba(2,8,18,0.7)'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = Math.max(24, Math.floor(W * 0.04)) + 'px sans-serif'; ctx.fillText(`Time's up!`, W / 2, H / 2 - 30); ctx.font = Math.max(18, Math.floor(W * 0.03)) + 'px sans-serif'; ctx.fillText(`Final score: ${finalScore}`, W / 2, H / 2 + 6); ctx.font = Math.max(14, Math.floor(W * 0.02)) + 'px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText(`Click Reset to play again`, W / 2, H / 2 + 46); }
+
+      startBtn.addEventListener('click', () => { startGame(); });
+      pauseBtn.addEventListener('click', () => { pauseGame(); });
+      resetBtn.addEventListener('click', () => { resetGame(); });
+      const fullscreenBtn = document.getElementById('fullscreen');
+      fullscreenBtn.addEventListener('click', () => { if (!document.fullscreenElement) { canvas.requestFullscreen?.(); } else { document.exitFullscreen?.(); } });
+      document.addEventListener('fullscreenchange', () => { if (document.fullscreenElement === canvas) { setCanvasSize(window.innerWidth, window.innerHeight); fullscreenBtn.textContent = 'Exit Fullscreen'; } else { resizeCanvas(); fullscreenBtn.textContent = 'Fullscreen'; } });
+
+      function authoring() { for (let i = 0; i < 6; i++) { const r = rand(18, 36); const x = rand(r, W - r); const y = rand(H * 0.4, H * 0.95); bubbles.push(new Bubble(x, y, r, rand(-10, 10), rand(-20, -60), `hsl(${rand(160, 320)}deg ${rand(60, 85)}% ${rand(50, 70)}% / 0.9)`)); } }
+
+      // initial setup
+      resizeCanvas();
+      authoring();
       requestAnimationFrame(gameLoop);
-    }
-
-    function tickTimer(){ if(!running || paused) return; remaining = Math.max(0, remaining - 1); timeEl.textContent = `Time: ${remaining}`; timebar.style.width = `${(remaining/gameDuration)*100}%`; if(remaining <= 0){ endGame(); } }
-
-    function startGame(){ if(running) return; difficulty = difficultySelect.value; running = true; paused = false; lastTime = 0; spawnTimer = 0; score = 0; scoreEl.textContent = `Score: ${score}`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; showEndOverlay = false; finalScore = 0; timerInterval = setInterval(tickTimer, 1000); }
-    function pauseGame(){ if(!running) return; paused = !paused; pauseBtn.textContent = paused? 'Resume' : 'Pause'; }
-    function resetGame(){ running = false; paused = false; clearInterval(timerInterval); timerInterval = null; score = 0; scoreEl.textContent = `Score: 0`; remaining = gameDuration; timeEl.textContent = `Time: ${remaining}`; timebar.style.width = '100%'; bubbles = []; particles = []; pauseBtn.textContent = 'Pause'; showEndOverlay = false; finalScore = 0; }
-    function endGame(){ running = false; clearInterval(timerInterval); timerInterval = null; finalScore = score; showEndOverlay = true; if(document.fullscreenElement){ document.exitFullscreen?.(); } }
-
-    function drawOverlay(){ ctx.fillStyle = 'rgba(2,8,18,0.7)'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = Math.max(24, Math.floor(W * 0.04)) + 'px sans-serif'; ctx.fillText(`Time's up!`, W/2, H/2 - 30); ctx.font = Math.max(18, Math.floor(W * 0.03)) + 'px sans-serif'; ctx.fillText(`Final score: ${finalScore}`, W/2, H/2 + 6); ctx.font = Math.max(14, Math.floor(W * 0.02)) + 'px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText(`Click Reset to play again`, W/2, H/2 + 46); }
-
-    startBtn.addEventListener('click', ()=>{ startGame(); });
-    pauseBtn.addEventListener('click', ()=>{ pauseGame(); });
-    resetBtn.addEventListener('click', ()=>{ resetGame(); });
-    const fullscreenBtn = document.getElementById('fullscreen');
-    fullscreenBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement){ canvas.requestFullscreen?.(); } else { document.exitFullscreen?.(); } });
-    document.addEventListener('fullscreenchange', ()=>{ if(document.fullscreenElement === canvas){ setCanvasSize(window.innerWidth, window.innerHeight); fullscreenBtn.textContent = 'Exit Fullscreen'; } else { resizeCanvas(); fullscreenBtn.textContent = 'Fullscreen'; } });
-
-    function authoring(){ for(let i=0;i<6;i++){ const r = rand(18,36); const x = rand(r, W-r); const y = rand(H*0.4, H*0.95); bubbles.push(new Bubble(x,y,r, rand(-10,10), rand(-20,-60), `hsl(${rand(160,320)}deg ${rand(60,85)}% ${rand(50,70)}% / 0.9)`)); } }
-
-    // initial setup
-    resizeCanvas();
-    authoring();
-    requestAnimationFrame(gameLoop);
-  })();
+    })();
   </script>
 
+  <script>
+    // Small-screen controls hamburger behavior (toggle open/close, icon swap, anchored positioning)
+    (function () {
+      var toggle = document.getElementById('controlsToggle');
+      var controls = document.getElementById('controls');
+      var ui = document.getElementById('ui');
+      if (!toggle || !controls || !ui) return;
+
+      function setIconToClose() { var i = toggle.querySelector('i'); if (i) { i.classList.remove('bi-list'); i.classList.add('bi-x'); } }
+      function setIconToList() { var i = toggle.querySelector('i'); if (i) { i.classList.remove('bi-x'); i.classList.add('bi-list'); } }
+
+      function openControls(){
+        // ensure controls are visible as overlay
+        controls.classList.add('open'); toggle.classList.add('active'); toggle.setAttribute('aria-expanded','true'); setIconToClose();
+        // position dropdown so it anchors to the toggle inside #ui
+        var rectToggle = toggle.getBoundingClientRect();
+        var rectUI = ui.getBoundingClientRect();
+        // calculate position relative to the UI container
+        var top = rectToggle.bottom - rectUI.top + 8; // 8px gap
+        var right = Math.max(8, (rectUI.right - rectToggle.right) + 8);
+        controls.style.position = 'absolute';
+        controls.style.top = top + 'px';
+        controls.style.right = right + 'px';
+        controls.style.left = 'auto';
+        // ensure it doesn't overflow viewport vertically
+        var maxH = window.innerHeight - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 0) - 120;
+        controls.style.maxHeight = Math.max(120, maxH) + 'px';
+      }
+
+      function closeControls(){ controls.classList.remove('open'); toggle.classList.remove('active'); toggle.setAttribute('aria-expanded','false'); setIconToList(); controls.style.position = ''; controls.style.top = ''; controls.style.right = ''; controls.style.left = ''; controls.style.maxHeight = ''; }
+
+      toggle.addEventListener('click', function(e){ e.stopPropagation(); if (controls.classList.contains('open')) closeControls(); else openControls(); });
+      // close when clicking outside
+      document.addEventListener('click', function(e){ if (!controls.contains(e.target) && !toggle.contains(e.target)) closeControls(); });
+      // close on escape, resize or orientation change
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeControls(); });
+      window.addEventListener('resize', closeControls);
+      window.addEventListener('orientationchange', closeControls);
+    })();
+  </script>
+
+  <script>
+    // Make sure the fixed header doesn't overlap the main content (game controls)
+    (function () {
+      function adjustForHeader() {
+        var header = document.getElementById('header');
+        var container = document.querySelector('.game-container');
+        if (!header) return;
+        // measure header height and add a small safety offset
+        var measured = header.getBoundingClientRect().height || header.offsetHeight || 0;
+        var safe = Math.ceil(measured) + 6; // slightly smaller breathing room to reduce gap
+        // expose header height to CSS so layout calc() uses it
+        document.documentElement.style.setProperty('--header-height', safe + 'px');
+        // Do not set inline padding on <main> - CSS will use the --header-height var to apply padding.
+        // container max-height is handled by CSS using the --header-height var; as a fallback, set it here too
+        if (container) {
+          var available = window.innerHeight - safe - 40; // breathing room
+          container.style.maxHeight = Math.max(160, available) + 'px';
+        }
+      }
+
+      // re-run after window load and after fonts/images settle
+      window.addEventListener('load', function () { adjustForHeader(); setTimeout(adjustForHeader, 350); });
+      // watch for header size changes (font/icon loading) and update
+      var headerEl = document.getElementById('header');
+      if (window.MutationObserver && headerEl) {
+        var mo = new MutationObserver(function () { adjustForHeader(); });
+        mo.observe(headerEl, { attributes: true, childList: true, subtree: true });
+      }
+      window.addEventListener('resize', adjustForHeader);
+      window.addEventListener('orientationchange', adjustForHeader);
+      // initial attempt
+      setTimeout(adjustForHeader, 120);
+    })();
+  </script>
+  <script>
+    (function (s, e, n, d, er) {
+      s['Sender'] = er;
+      s[er] = s[er] || function () {
+        (s[er].q = s[er].q || []).push(arguments)
+      }, s[er].l = 1 * new Date();
+      var a = e.createElement(n),
+          m = e.getElementsByTagName(n)[0];
+      a.async = 1;
+      a.src = d;
+      m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'https://cdn.sender.net/accounts_resources/universal.js', 'sender');
+    sender('f16e23f82b2989')
+  </script>
 </body>
+
 </html>
-function drawOverlay(){
-  // dim background
-  ctx.fillStyle = 'rgba(2,8,18,0.7)'; ctx.fillRect(0,0,W,H);
-  // main text
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-  ctx.font = Math.max(24, Math.floor(W * 0.04)) + 'px sans-serif';
-  ctx.fillText(`Time's up!`, W/2, H/2 - 30);
-  ctx.font = Math.max(18, Math.floor(W * 0.03)) + 'px sans-serif';
-  ctx.fillText(`Final score: ${finalScore}`, W/2, H/2 + 6);
-  // restart hint
-  ctx.font = Math.max(14, Math.floor(W * 0.02)) + 'px sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText(`Click Reset to play again`, W/2, H/2 + 46);
-}
-
-startBtn.addEventListener('click', ()=>{ startGame(); });
-pauseBtn.addEventListener('click', ()=>{ pauseGame(); });
-resetBtn.addEventListener('click', ()=>{ resetGame(); });
-const fullscreenBtn = document.getElementById('fullscreen');
-fullscreenBtn.addEventListener('click', ()=>{
-  if(!document.fullscreenElement){
-    // request fullscreen on the canvas container for immersive view
-    canvas.requestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
-  }
-});
-
-document.addEventListener('fullscreenchange', ()=>{
-  if(document.fullscreenElement === canvas){
-    // enter fullscreen: match window size
-    setCanvasSize(window.innerWidth, window.innerHeight);
-    fullscreenBtn.textContent = 'Exit Fullscreen';
-  } else {
-    // exit fullscreen: restore base size
-    setCanvasSize(baseW, baseH);
-    fullscreenBtn.textContent = 'Fullscreen';
-  }
-});
-
-authoring();
-requestAnimationFrame(gameLoop);
-
-// small helper to initialize friendly starter bubbles
-function authoring(){
-  // place some gentle bubbles when idle
-  for(let i=0;i<6;i++){
-    const r = rand(18,36);
-    const x = rand(r, W-r);
-    const y = rand(H*0.4, H*0.95);
-    bubbles.push(new Bubble(x,y,r, rand(-10,10), rand(-20,-60), `hsl(${rand(160,320)}deg ${rand(60,85)}% ${rand(50,70)}% / 0.9)`));
-  }
-}
-
-// Make canvas crisp on high-DPI
-// Setup canvas logical size and scale for DPI so game math uses baseW/baseH
-(function setupCanvas(){
-  const ratio = window.devicePixelRatio || 1;
-  canvas.style.width = baseW + 'px';
-  canvas.style.height = baseH + 'px';
-  canvas.width = Math.floor(baseW * ratio);
-  canvas.height = Math.floor(baseH * ratio);
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0); // scale drawing operations
-  W = baseW; H = baseH;
-})();
-
-</script>
-</body>
-  </head>
-  <body class="index-page">
-+    <!-- header -->
-+    <header id="header" class="header d-flex align-items-center fixed-top">
-+      <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-+
-+        <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
-+          <img src="assets/img/logo.png" alt="">
-+          <h1 class="sitename">Saptarshi</h1>
-+        </a>
-+
-+        <nav id="navmenu" class="navmenu">
-+          <ul>
-+            <li><a href="/tic-tac-toe.html">Tic-Tac-Toe</a></li>
-+            <li><a href="/bubble-burst.html" class="active">Bubble Burst</a></li>
-+            <li><a href="/index.html">Home</a></li>
-+          </ul>
-+          <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-+        </nav>
-+
-+        <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
-+
-+      </div>
-+    </header>
-+
-+    <main class="main page-content" style="padding-top:100px;">
-+
-+      <div class="wrap" style="max-width:980px;margin:0 auto;padding:20px;">
-+        <h1>Bubble Burst</h1>
-@@
