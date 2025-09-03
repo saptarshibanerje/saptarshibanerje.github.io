@@ -14,22 +14,35 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # For web-react branch → install + build
       - name: Setup Node.js
+        if: github.ref_name == 'web-react'
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Install dependencies
-        run: npm ci
+        if: github.ref_name == 'web-react'
+        run: npm install
 
       - name: Build site
+        if: github.ref_name == 'web-react'
         run: npm run build
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
+
+      # For master branch → no build, just publish static files
+      - name: Copy static files
+        if: github.ref_name == 'master'
+        run: |
+          mkdir dist
+          cp -r * dist/
+          rm -rf dist/.git dist/.github
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
