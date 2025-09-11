@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dice Game</title>
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+  <style>
+    body { background:#f5f6f8; }
+    .game-section { padding-top:130px; padding-bottom:60px; }
+    .game-card { background:#fff; border-radius:20px; padding:28px 30px 34px; box-shadow:0 8px 28px -6px rgba(22,34,55,0.15); margin:0 auto; max-width:560px; }
+    .game-card h1 { font-size:clamp(1.6rem, 3.5vw, 2.2rem); font-weight:700; margin:0 0 14px; text-align:center; letter-spacing:.5px; background:linear-gradient(90deg,#0d4d96,#28a5ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .dice-canvas-wrap { width:100%; max-width:260px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; }
+  #diceCanvas { width:100%; height:auto; aspect-ratio:1/1; border-radius:18px; box-shadow:0 4px 24px rgba(24,90,157,0.13); background:#185a9d; display:block; }
+    .game-actions { text-align:center; margin-top:18px; }
+    .game-actions #rollBtn { background:#212529; color:#fff; border:none; padding:10px 28px; border-radius:8px; font-weight:600; font-size:1.1rem; letter-spacing:.4px; box-shadow:0 2px 8px #185a9d44; }
+    .game-actions #rollBtn:hover { background:#0d6efd; }
+    @media (max-width:480px){ .game-card { padding:22px 12px 30px; } }
+  </style>
+</head>
+<body class="index-page">
+  <!-- site header -->
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="assets/img/logo.png" alt="">
+        <h1 class="sitename">Saptarshi</h1>
+      </a>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/tic-tac-toe.html">Tic-Tac-Toe</a></li>
+          <li><a href="/bubble-burst.html">Bubble Burst</a></li>
+          <li><a href="/dice-game.html" class="active">Dice Game</a></li>
+          <li><a href="/index.html">Home</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+      <a class="btn-getstarted" href="#" id="show-contact-popup">Get Started</a>
+    </div>
+  </header>
+
+  <main class="main page-content game-section">
+    <div class="game-card">
+      <h1>Dice Game</h1>
+      <div class="dice-canvas-wrap">
+        <canvas id="diceCanvas"></canvas>
+      </div>
+      <div class="game-actions"><button id="rollBtn">Roll Dice</button></div>
+    </div>
+  </main>
+
+  <!-- vendor & main scripts for nav behavior -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script>
+    const canvas = document.getElementById('diceCanvas');
+    const ctx = canvas.getContext('2d');
+    const rollBtn = document.getElementById('rollBtn');
+
+    // Responsive canvas sizing
+    function resizeCanvas() {
+      let size = Math.min(360, Math.min(window.innerWidth, window.innerHeight) * 0.9);
+      canvas.width = size;
+      canvas.height = size;
+    }
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      diceState.size = canvas.width * 0.45;
+      diceState.x = canvas.width/2 - diceState.size/2;
+      diceState.y = canvas.height/2 - diceState.size/2;
+      clearBoard();
+      drawDice(diceState.x, diceState.y, diceState.size, diceState.value);
+    });
+    resizeCanvas();
+
+    // Dice drawing helper
+    function drawDice(x, y, size, value, shadow = true) {
+      ctx.save();
+      let grad = ctx.createLinearGradient(x, y, x+size, y+size);
+      grad.addColorStop(0, '#fffbe6');
+      grad.addColorStop(0.5, '#ffe066');
+      grad.addColorStop(1, '#ff4081');
+      if (shadow) {
+        ctx.shadowColor = 'rgba(255,64,129,0.18)';
+        ctx.shadowBlur = 24;
+      }
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      let r = size * 0.18;
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + size - r, y);
+      ctx.quadraticCurveTo(x + size, y, x + size, y + r);
+      ctx.lineTo(x + size, y + size - r);
+      ctx.quadraticCurveTo(x + size, y + size, x + size - r, y + size);
+      ctx.lineTo(x + r, y + size);
+      ctx.quadraticCurveTo(x, y + size, x, y + size - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = '#ff4081';
+      ctx.stroke();
+      ctx.globalAlpha = 0.18;
+      ctx.beginPath();
+      ctx.arc(x + size*0.35, y + size*0.35, size*0.28, Math.PI*1.2, Math.PI*2, false);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      // Draw pips
+      const pip = (px, py) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x + px * size, y + py * size, size * 0.09, 0, Math.PI * 2);
+        ctx.fillStyle = '#185a9d';
+        ctx.shadowColor = '#185a9d44';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.restore();
+      };
+      const pips = [
+        [],
+        [[0.5,0.5]],
+        [[0.25,0.25],[0.75,0.75]],
+        [[0.25,0.25],[0.5,0.5],[0.75,0.75]],
+        [[0.25,0.25],[0.25,0.75],[0.75,0.25],[0.75,0.75]],
+        [[0.25,0.25],[0.25,0.75],[0.5,0.5],[0.75,0.25],[0.75,0.75]],
+        [[0.25,0.25],[0.25,0.75],[0.5,0.25],[0.5,0.75],[0.75,0.25],[0.75,0.75]]
+      ];
+      pips[value].forEach(([px,py])=>pip(px,py));
+    }
+
+    let diceState = {
+      x: 0,
+      y: 0,
+      size: 0,
+      value: 1,
+      vx: 0,
+      vy: 0,
+      rolling: false,
+      rollStart: 0,
+      rollDuration: 2000
+    };
+
+    function clearBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function animateDice() {
+      if (!diceState.rolling) return;
+      clearBoard();
+      diceState.x += diceState.vx;
+      diceState.y += diceState.vy;
+      if (diceState.x < 0) { diceState.x = 0; diceState.vx *= -0.7; }
+      if (diceState.x + diceState.size > canvas.width) { diceState.x = canvas.width - diceState.size; diceState.vx *= -0.7; }
+      if (diceState.y < 0) { diceState.y = 0; diceState.vy *= -0.7; }
+      if (diceState.y + diceState.size > canvas.height) { diceState.y = canvas.height - diceState.size; diceState.vy *= -0.7; }
+      diceState.vx *= 0.97;
+      diceState.vy *= 0.97;
+      diceState.value = Math.floor(Math.random() * 6) + 1;
+      drawDice(diceState.x, diceState.y, diceState.size, diceState.value);
+      if (performance.now() - diceState.rollStart > diceState.rollDuration) {
+        diceState.rolling = false;
+        diceState.value = Math.floor(Math.random() * 6) + 1;
+        clearBoard();
+        drawDice(diceState.x, diceState.y, diceState.size, diceState.value, false);
+        rollBtn.disabled = false;
+        return;
+      }
+      requestAnimationFrame(animateDice);
+    }
+
+    function initDice() {
+      diceState.size = canvas.width * 0.45;
+      diceState.x = canvas.width/2 - diceState.size/2;
+      diceState.y = canvas.height/2 - diceState.size/2;
+      diceState.value = 1;
+      clearBoard();
+      drawDice(diceState.x, diceState.y, diceState.size, diceState.value);
+    }
+    initDice();
+
+    rollBtn.addEventListener('click', () => {
+      rollBtn.disabled = true;
+      diceState.size = canvas.width * 0.45;
+      diceState.x = canvas.width/2 - diceState.size/2;
+      diceState.y = canvas.height/2 - diceState.size/2;
+      diceState.vx = (Math.random() - 0.5) * canvas.width * 0.13;
+      diceState.vy = (Math.random() - 0.5) * canvas.height * 0.13;
+      diceState.rollDuration = 2000 + Math.random() * 2000;
+      diceState.rollStart = performance.now();
+      diceState.rolling = true;
+      animateDice();
+    });
+  </script>
+</body>
+</html>
